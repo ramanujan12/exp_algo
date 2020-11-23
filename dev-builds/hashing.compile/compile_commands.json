@@ -1,0 +1,8 @@
+[
+  {
+    "directory": "/vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing.compile",
+    "command": "c++ -Ihashing.p -I. -I../../develop/hashing -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wnon-virtual-dtor -std=c++17 -O2 -g -MD -MQ hashing.p/main.cpp.o -MF hashing.p/main.cpp.o.d -o hashing.p/main.cpp.o -c ../../develop/hashing/main.cpp",
+    "file": "../../develop/hashing/main.cpp",
+    "output": "hashing.p/main.cpp.o"
+  }
+]

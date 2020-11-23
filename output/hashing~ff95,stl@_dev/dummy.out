@@ -1,0 +1,6 @@
+algo: stl
+m: 67108864
+fill_factor: 0.95
+time_insert: 48562 # ms
+time_lookup: 11381 # ms
+time_misses: 6878 # ms

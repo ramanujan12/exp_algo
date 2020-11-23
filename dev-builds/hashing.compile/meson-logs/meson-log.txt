@@ -1,0 +1,84 @@
+Build started at 2020-11-22T16:56:05.724106
+Main binary: /usr/bin/python3
+Build Options: -Dprefix=/vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing -Dbuildtype=debugoptimized
+Python system: Linux
+The Meson build system
+Version: 0.56.0
+Source dir: /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/develop/hashing
+Build dir: /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing.compile
+Build type: native build
+Project name: expalgo-hashing
+Project version: undefined
+None of 'CXX' are defined in the environment, not changing global flags.
+None of 'CXXFLAGS' are defined in the environment, not changing global flags.
+None of 'LDFLAGS' are defined in the environment, not changing global flags.
+None of 'CPPFLAGS' are defined in the environment, not changing global flags.
+None of 'CXX_LD' are defined in the environment, not changing global flags.
+Sanity testing C++ compiler: c++
+Is cross compiler: False.
+None of 'CXX_LD' are defined in the environment, not changing global flags.
+Sanity check compiler command line: c++ /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing.compile/meson-private/sanitycheckcpp.cc -o /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing.compile/meson-private/sanitycheckcpp.exe -pipe -D_FILE_OFFSET_BITS=64
+Sanity check compile stdout:
+
+-----
+Sanity check compile stderr:
+
+-----
+Running test binary command: /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing.compile/meson-private/sanitycheckcpp.exe
+C++ compiler for the host machine: c++ (gcc 7.5.0 "c++ (SUSE Linux) 7.5.0")
+C++ linker for the host machine: c++ ld.bfd 15.1
+None of 'AR' are defined in the environment, not changing global flags.
+None of 'CXX' are defined in the environment, not changing global flags.
+None of 'CXXFLAGS' are defined in the environment, not changing global flags.
+None of 'LDFLAGS' are defined in the environment, not changing global flags.
+None of 'CPPFLAGS' are defined in the environment, not changing global flags.
+None of 'CXX_LD' are defined in the environment, not changing global flags.
+Sanity testing C++ compiler: c++
+Is cross compiler: False.
+None of 'CXX_LD' are defined in the environment, not changing global flags.
+Sanity check compiler command line: c++ /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing.compile/meson-private/sanitycheckcpp.cc -o /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing.compile/meson-private/sanitycheckcpp.exe -pipe -D_FILE_OFFSET_BITS=64
+Sanity check compile stdout:
+
+-----
+Sanity check compile stderr:
+
+-----
+Running test binary command: /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing.compile/meson-private/sanitycheckcpp.exe
+C++ compiler for the build machine: c++ (gcc 7.5.0 "c++ (SUSE Linux) 7.5.0")
+C++ linker for the build machine: c++ ld.bfd 15.1
+None of 'AR' are defined in the environment, not changing global flags.
+Build machine cpu family: x86_64
+Build machine cpu: x86_64
+Host machine cpu family: x86_64
+Host machine cpu: x86_64
+Target machine cpu family: x86_64
+Target machine cpu: x86_64
+Build targets in project: 1
+
+Found ninja-1.10.0 at /usr/bin/ninja
+Running compile:
+Working directory:  /tmp/tmpxquro6k5
+Command line:  c++ /tmp/tmpxquro6k5/testfile.cpp -o /tmp/tmpxquro6k5/output.obj -pipe -D_FILE_OFFSET_BITS=64 -c -std=c++17 
+
+Code:
+ int i = static_cast<int>(0);
+Compiler stdout:
+ 
+Compiler stderr:
+ 
+Compiler accepts -std=c++17: YES
+Running compile:
+Working directory:  /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing.compile/meson-private/tmp3d5gts0d
+Command line:  c++ /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing.compile/meson-private/tmp3d5gts0d/testfile.cpp -o /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing.compile/meson-private/tmp3d5gts0d/output.obj -pipe -c -D_FILE_OFFSET_BITS=64 -O0 -fpermissive --print-search-dirs 
+
+Code:
+ 
+Compiler stdout:
+ install: /usr/lib64/gcc/x86_64-suse-linux/7/
+programs: =/usr/lib64/gcc/x86_64-suse-linux/7/:/usr/lib64/gcc/x86_64-suse-linux/7/:/usr/lib64/gcc/x86_64-suse-linux/:/usr/lib64/gcc/x86_64-suse-linux/7/:/usr/lib64/gcc/x86_64-suse-linux/:/usr/lib64/gcc/x86_64-suse-linux/7/../../../../x86_64-suse-linux/bin/x86_64-suse-linux/7/:/usr/lib64/gcc/x86_64-suse-linux/7/../../../../x86_64-suse-linux/bin/
+libraries: =/usr/lib64/gcc/x86_64-suse-linux/7/:/usr/lib64/gcc/x86_64-suse-linux/7/../../../../x86_64-suse-linux/lib/x86_64-suse-linux/7/:/usr/lib64/gcc/x86_64-suse-linux/7/../../../../x86_64-suse-linux/lib/../lib64/:/usr/lib64/gcc/x86_64-suse-linux/7/../../../x86_64-suse-linux/7/:/usr/lib64/gcc/x86_64-suse-linux/7/../../../../lib64/:/lib/x86_64-suse-linux/7/:/lib/../lib64/:/usr/lib/x86_64-suse-linux/7/:/usr/lib/../lib64/:/usr/lib64/gcc/x86_64-suse-linux/7/../../../../x86_64-suse-linux/lib/:/usr/lib64/gcc/x86_64-suse-linux/7/../../../:/lib/:/usr/lib/
+
+Compiler stderr:
+ 
+None of 'STRIP' are defined in the environment, not changing global flags.
+None of 'STRIP' are defined in the environment, not changing global flags.

@@ -1,0 +1,59 @@
+builds:
+  - name: hashing
+    git: none
+    configure:
+      - args:
+        - 'meson'
+        - '--prefix=@THIS_PREFIX_DIR@'
+        - '--buildtype=debugoptimized'
+        - '@THIS_SOURCE_DIR@'
+    compile:
+      - args: ['ninja']
+    install:
+      - args: ['ninja', 'install']
+
+revisions:
+  - develop: true
+    build_version:
+      'hashing': ''
+
+experiments:
+  - name: hashing
+    use_builds: [hashing]
+    args: ['hashing', '@EXTRA_ARGS@']
+    stdout: out
+
+# These variants define the algorithms that we want to run + the fill factors.
+# It should be easy to extend this to more algorithms.
+variants:
+  - axis: algorithm
+    items:
+      - name: chaining
+        extra_args: ['--algo', 'chaining']
+      - name: linear
+        extra_args: ['--algo', 'linear']
+      - name: stl
+        extra_args: ['--algo', 'stl']
+      - name: quadratic
+        extra_args: ['--algo', 'quadratic']
+      - name: robin_hood
+        extra_args: ['--algo', 'robin_hood']
+
+  - axis: fill-factor
+    items:
+      - name: ff50
+        extra_args: ['--fill', '0.50']
+      - name: ff80
+        extra_args: ['--fill', '0.80']
+      - name: ff90
+        extra_args: ['--fill', '0.90']
+      - name: ff95
+        extra_args: ['--fill', '0.95']
+      - name: ff99
+        extra_args: ['--fill', '0.99']
+
+# Simexpal wants an "instance" file, so we add an empty dummy file.
+instances:
+  - repo: local
+    items:
+      - dummy
