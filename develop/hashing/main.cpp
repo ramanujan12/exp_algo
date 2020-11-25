@@ -257,6 +257,9 @@ struct robin_hood_table {
                 std::swap(c.key, k);
                 std::swap(c.value, v);
                 std::swap(c.psl, i);
+                if (c.psl > psl_max) {
+                    psl_max = c.psl;
+                }
                 return this->put(k, v);
             }
             ++i;
