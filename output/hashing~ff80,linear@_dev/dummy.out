@@ -1,6 +1,0 @@
-algo: linear
-m: 67108864
-fill_factor: 0.8
-time_insert: 2656 # ms
-time_lookup: 1554 # ms
-time_misses: 1394 # ms
