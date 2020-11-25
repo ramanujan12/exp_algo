@@ -5,7 +5,6 @@
 *aux/
 *output/
 *instances/
-*.tar.gz
 *status.cache
 simexpal.egg-info/
 *__pycache__/

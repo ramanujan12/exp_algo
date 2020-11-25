@@ -239,19 +239,19 @@ struct robin_hood_table {
                 c.value = v;
                 c.psl = i;
                 c.valid = true;
-		
+
                 if (c.psl > psl_max) {
-		  psl_max = c.psl;
+                    psl_max = c.psl;
                 }
                 return;
             }
-	    
+
             // -> not empty
             if (c.key == k) {
-	      c.value = v;
-	      return;
+                c.value = v;
+                return;
             }
-	    
+
             // check psl, swap if our probe sequence is bigger and instert again
             if (c.psl < i) {
                 std::swap(c.key, k);
@@ -339,26 +339,26 @@ void evaluate(float fill_factor) {
 
     int nv = 1;
     {
-      std::uniform_int_distribution<int> distrib{0, n};
-      std::unordered_map<int, int> temp;
-      for(int i = 0; i < n; ++i) {
-	int k = pool[distrib(prng)];
-	inserts.push_back({k, nv});
-	temp[k] = nv;
-	++nv;
-      }
-      
-      for(auto [k, v] : temp)
-	truth.push_back({k, v});
-      
-      for (auto k : pool) {
-	if (temp.find(k) == temp.end())
-	  misses.push_back(k);
-      }
+        std::uniform_int_distribution<int> distrib{0, n};
+        std::unordered_map<int, int> temp;
+        for(int i = 0; i < n; ++i) {
+            int k = pool[distrib(prng)];
+            inserts.push_back({k, nv});
+            temp[k] = nv;
+            ++nv;
+        }
+
+        for(auto [k, v] : temp)
+            truth.push_back({k, v});
+
+        for (auto k : pool) {
+            if (temp.find(k) == temp.end())
+                misses.push_back(k);
+        }
     }
-    
+
     std::cerr << "Performing insertions..." << std::endl;
-    
+
     auto insert_start = std::chrono::high_resolution_clock::now();
     for(auto [k, v] : inserts)
         table.put(k, v);
@@ -374,13 +374,13 @@ void evaluate(float fill_factor) {
     for(auto [k, v] : truth) {
         auto r = table.get(k);
         if(!r) {
-	  ++errors;
-	  continue;
+            ++errors;
+            continue;
         }
 
         if(*r != v) {
-	  ++errors;
-	  continue;
+            ++errors;
+            continue;
         }
     }
     auto t_lookup = std::chrono::high_resolution_clock::now() - lookup_start;
@@ -388,13 +388,13 @@ void evaluate(float fill_factor) {
     // measure timing for misses
     auto misses_start = std::chrono::high_resolution_clock::now();
     for (auto k : misses) {
-      auto r = table.get(k);
-      if (r) {
-	++errors;
-      }
+        auto r = table.get(k);
+        if (r) {
+            ++errors;
+        }
     }
     auto t_misses = std::chrono::high_resolution_clock::now() - misses_start;
-    
+
     std::cerr << "There were " << errors << " errors" << std::endl;
     assert(!errors);
 
