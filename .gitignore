@@ -1,3 +1,6 @@
 status.cache
 .ipynb_checkpoints/
 *.pdf
+my-build/*
+my_build/*
+dev-builds/*

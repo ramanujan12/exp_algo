@@ -1,6 +1,0 @@
-[options]
-prefix = /vol/fob-vol7/nebenf18/schuermj/algo/ex1-hash-basics/dev-builds/hashing
-buildtype = debugoptimized
-
-[properties]
-
