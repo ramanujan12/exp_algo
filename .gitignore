@@ -8,3 +8,4 @@
 *status.cache
 simexpal.egg-info/
 *__pycache__/
+.DS_Store

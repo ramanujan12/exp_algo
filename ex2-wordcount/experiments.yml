@@ -1,0 +1,62 @@
+builds:
+  - name: wordcount
+    git: none
+    configure:
+      - args:
+        - 'meson'
+        - '--prefix=@THIS_PREFIX_DIR@'
+        - '--buildtype=debugoptimized'
+        - '@THIS_SOURCE_DIR@'
+    compile:
+      - args: ['ninja']
+    install:
+      - args: ['ninja', 'install']
+
+revisions:
+  - develop: true
+    build_version:
+      'wordcount': ''
+
+experiments:
+  - name: wordcount
+    use_builds: [wordcount]
+    args: ['wordcount', '@EXTRA_ARGS@']
+    stdout: out
+
+variants:
+  - axis: threads
+    items:
+      - name: t01
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 1
+      - name: t02
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 2
+      - name: t04
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 4
+      - name: t08
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 8
+      - name: t16
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 16
+      - name: t32
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 32
+      - name: t64
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 64
+
+# Simexpal wants an "instance" file, so we add an empty dummy file.
+instances:
+  - repo: local
+    items:
+      - dummy

@@ -1,0 +1,50 @@
+builds:
+  - name: hashing
+    git: none
+    configure:
+      - args:
+        - 'meson'
+        - '--prefix=@THIS_PREFIX_DIR@'
+        - '--buildtype=debugoptimized'
+        - '@THIS_SOURCE_DIR@'
+    compile:
+      - args: ['ninja']
+    install:
+      - args: ['ninja', 'install']
+
+revisions:
+  - develop: true
+    build_version:
+      'hashing': ''
+
+experiments:
+  - name: hashing
+    use_builds: [hashing]
+    args: ['hashing', '@EXTRA_ARGS@']
+    stdout: out
+
+variants:
+  - axis: algo
+    items:
+      - name: static
+        extra_args: ['--algo', 'stl']
+      - name: stl
+        extra_args: ['--algo', 'static']
+  - axis: c
+    items:
+      - name: c50
+        extra_args: ['--max-fill', '0.50']
+      - name: c80
+        extra_args: ['--max-fill', '0.80']
+      - name: c90
+        extra_args: ['--max-fill', '0.90']
+      - name: c95
+        extra_args: ['--max-fill', '0.95']
+      - name: c99
+        extra_args: ['--max-fill', '0.99']
+
+# Simexpal wants an "instance" file, so we add an empty dummy file.
+instances:
+  - repo: local
+    items:
+      - dummy
