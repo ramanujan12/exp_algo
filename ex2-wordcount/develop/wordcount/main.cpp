@@ -87,9 +87,6 @@ size_t count_substrings(const std::vector<uint8_t> &input) {
 
     concurrent_chaining_table chaining_table {};
 
-    // for debugging purpose
-    std::unordered_set <int> stl_table;
-
     for (size_t i = 0; i < (input.size() - 3u); ++i) {
         unsigned int key =
                   (static_cast<unsigned int>(input[i]) << 24u)
@@ -98,21 +95,13 @@ size_t count_substrings(const std::vector<uint8_t> &input) {
                 | static_cast<unsigned int>(input[i + 3]);
 
         chaining_table.put(key);
-
-        // for debugging purpose
-        stl_table.insert(key);
     }
-    // for debugging purpose
-    std::cout << "Input vector size = " << input.size() << std::endl;
-    std::cout << "Size of standart library hashtable = " << stl_table.size() << std::endl;
-    std::cout << "Size of chaining hashtable = " << chaining_table.get_count() << std::endl;
-
     return chaining_table.get_count();
 }
 
 int main() {
     std::vector<uint8_t> input;
-    input.resize(1 << 24);
+    input.resize(1 << 28);
 
     std::mt19937 prng{42};
 
