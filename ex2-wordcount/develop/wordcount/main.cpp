@@ -10,6 +10,9 @@
 #include <random>
 #include <vector>
 
+#include <bitset>
+#include <unordered_set>
+
 constexpr int M = 1u << 26u;
 
 // This function turns a hash into an index in [0, M).
@@ -29,11 +32,11 @@ struct concurrent_chaining_table {
 
     chain **heads = nullptr;
     std::mutex *mutexes = nullptr;
-    int count = 0;
-    std::mutex *count_mutex;
+    int count;
+    std::mutex count_mutex;
 
     concurrent_chaining_table()
-        : heads{new chain *[M]{}}, mutexes{new std::mutex[M]}, count_mutex{new std::mutex} { }
+        : heads{new chain *[M]{}}, mutexes{new std::mutex[M]}, count{0} { }
 
     // Note: to simplify the implementation, destructors and copy/move constructors are missing.
 
@@ -49,7 +52,7 @@ struct concurrent_chaining_table {
             heads[idx] = new chain{nullptr, k};
             // Create scope block for count mutex
             {
-                std::lock_guard lock{count_mutex};
+                std::lock_guard<std::mutex> count_lock{count_mutex};
                 ++count;
             }
             return;
@@ -65,7 +68,7 @@ struct concurrent_chaining_table {
                 p->next = new chain{nullptr, k};
                 // Create scope block for count mutex
                 {
-                    std::lock_guard lock{count_mutex};
+                    std::lock_guard<std::mutex> count_lock{count_mutex};
                     ++count;
                 }
                 return;
@@ -75,39 +78,49 @@ struct concurrent_chaining_table {
         }
     }
 
-    int get_count() const {
+    int get_count() {
         return this->count;
     }
-
-
 };
 
 size_t count_substrings(const std::vector<uint8_t> &input) {
 
-    concurrent_chaining_table hash_table {};
+    concurrent_chaining_table chaining_table {};
 
-    for (int i = 0; i < input.size() - 3; ++i) {
+    // for debugging purpose
+    std::unordered_set <int> stl_table;
+
+    for (size_t i = 0; i < (input.size() - 3u); ++i) {
         unsigned int key =
                   (static_cast<unsigned int>(input[i]) << 24u)
                 | (static_cast<unsigned int>(input[i + 1]) << 16u)
                 | (static_cast<unsigned int>(input[i + 2]) << 8u)
                 | static_cast<unsigned int>(input[i + 3]);
-        hash_table.put(key);
+
+        chaining_table.put(key);
+
+        // for debugging purpose
+        stl_table.insert(key);
     }
-    return hash_table.get_count();
+    // for debugging purpose
+    std::cout << "Input vector size = " << input.size() << std::endl;
+    std::cout << "Size of standart library hashtable = " << stl_table.size() << std::endl;
+    std::cout << "Size of chaining hashtable = " << chaining_table.get_count() << std::endl;
+
+    return chaining_table.get_count();
 }
 
 int main() {
     std::vector<uint8_t> input;
-    input.resize(1 << 26);
+    input.resize(1 << 24);
 
     std::mt19937 prng{42};
 
     std::cerr << "Generating random data..." << std::endl;
 
     std::uniform_int_distribution<int> distrib{0, 255};
-    for(unsigned char & i : input)
-        i = distrib(prng);
+    for(size_t i = 0; i < input.size(); ++i)
+                input[i] = distrib(prng);
 
     std::cerr << "Running benchmark..." << std::endl;
 
@@ -121,4 +134,3 @@ int main() {
               << std::chrono::duration_cast<std::chrono::milliseconds>(bench_elapsed).count()
               << " # ms" << std::endl;
 }
-
