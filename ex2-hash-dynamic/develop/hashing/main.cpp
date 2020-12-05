@@ -287,7 +287,7 @@ struct dynamic_scaling_table {
                 this->put(c.key, c.value);
             }
         }
-        //delete [] old_cells;
+        delete [] old_cells;
     }
 };
 
