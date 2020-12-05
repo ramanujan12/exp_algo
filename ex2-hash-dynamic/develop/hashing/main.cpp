@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <unistd.h>
+
 int num_insertions = 1u << 26u;
 
 // This hash table uses linear probing.
@@ -192,32 +194,40 @@ struct dynamic_scaling_table {
 		bool valid = false;
 	};
 
+    size_t table_size = 8;
+    // table_size = 2^exp
     unsigned int exp = 3;
     size_t insertions = 0;
 	cell *cells = nullptr;
     float max_fill;
 
     // Initidalize our array with 8 cells
-    dynamic_scaling_table(float max_fill) : cells{new cell[8]{}} {
+    dynamic_scaling_table(float max_fill) : cells{new cell[table_size]{}} {
         this->max_fill = max_fill;
     }
 
 	// Note: to simply the implementation, destructors and copy/move constructors are missing.
 
-    // This function computes h * m / 2 ^ 31. Since m = 2 ^ exp, we can do everything as bitshift
+    // This function computes floor(h * m / 2 ^ 31). Since m = 2 ^ exp, we can do everything as bitshift
 	// As hash, we just use the integer key directly.
     int scaling(int h) {
-        return (h << exp) >> 31u;
+        // if the table is bigger than 2^31, this implementation won't work because
+        // of the following bitshift and because the index 'idx' will overflow
+        assert(31u - exp > 0);
+        return h >> (31u - exp);
     }
 
+	int hash_to_index(int h) {
+		return h & (table_size - 1);
+	}
+
 	void put(int k, int v) {
-		int i = 0;
+		unsigned int i = 0;
 
 		while(true) {
-            // assert i < table_size
-			assert(i < (1u << exp));
-
-			auto idx = scaling(k) + i;
+			assert(i < table_size);
+            
+			auto idx = hash_to_index(scaling(k) + i);
 			auto &c = cells[idx];
 
 			if(!c.valid) {
@@ -225,8 +235,7 @@ struct dynamic_scaling_table {
 				c.value = v;
 				c.valid = true;
                 ++insertions;
-                // if fill factor > max fill factor
-                if((insertions >> exp) > max_fill) {
+                if((float)insertions / table_size > max_fill) {
                     resize_table();
                 }
 				return;
@@ -245,8 +254,7 @@ struct dynamic_scaling_table {
 		int i = 0;
 
 		while(true) {
-            // assert i < table_size
-			assert(i < (1u << exp));
+			assert(i < table_size);
 
 			auto idx = scaling(k) + i;
 			auto &c = cells[idx];
@@ -265,11 +273,12 @@ struct dynamic_scaling_table {
     void resize_table() {
         // Save old state
         cell * old_cells = cells;
-        auto old_size = 1u << exp;
+        auto old_size = table_size;
 
         // Double the size
+        table_size = table_size << 1u;
         ++exp;
-        cells = new cell[1u << exp];
+        cells = new cell[table_size];
 
         // Rehash existing entries in new table
         for(size_t i = 0; i < old_size; ++i) {
@@ -278,7 +287,7 @@ struct dynamic_scaling_table {
                 this->put(c.key, c.value);
             }
         }
-        delete [] old_cells;
+        //delete [] old_cells;
     }
 };
 
