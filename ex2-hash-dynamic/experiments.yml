@@ -28,6 +28,10 @@ variants:
     items:
       - name: static
         extra_args: ['--algo', 'stl']
+      - name: dynamic_modulo
+        extra_args: ['--algo', 'dynamic_modulo']
+      - name: dynamic_scaling
+        extra_args: ['--algo', 'dynamic_scaling']
       - name: stl
         extra_args: ['--algo', 'static']
   - axis: c
