@@ -32,6 +32,8 @@ variants:
         extra_args: ['--algo', 'dynamic_modulo']
       - name: dynamic_scaling
         extra_args: ['--algo', 'dynamic_scaling']
+      - name: dysect
+        extra_args: ['--algo', 'dysect']
       - name: stl
         extra_args: ['--algo', 'static']
   - axis: c
@@ -46,6 +48,29 @@ variants:
         extra_args: ['--max-fill', '0.95']
       - name: c99
         extra_args: ['--max-fill', '0.99']
+  - axis: subtables
+    items:
+      - name: s1
+        extra_args: ['--subtables', '1']
+      - name: s2
+        extra_args: ['--subtables', '2']
+      - name: s4
+        extra_args: ['--subtables', '4']
+      - name: s8
+        extra_args: ['--subtables', '8']
+      - name: s16
+        extra_args: ['--subtables', '16']
+      - name: s32
+        extra_args: ['--subtables', '32']
+
+matrix:
+  include:
+    - experiments: [hashing]
+      axes: [algo, c]
+      variants: [static, dynamic_modulo, dynamic_scaling, stl]
+    - experiments: [hashing]
+      axes: [algo, c, subtables]
+      variants: [dysect, c90]
 
 # Simexpal wants an "instance" file, so we add an empty dummy file.
 instances:
