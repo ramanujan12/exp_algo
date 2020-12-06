@@ -50,13 +50,13 @@ variants:
         extra_args: ['--max-fill', '0.99']
   - axis: subtables
     items:
-      - name: s1
+      - name: s01
         extra_args: ['--subtables', '1']
-      - name: s2
+      - name: s02
         extra_args: ['--subtables', '2']
-      - name: s4
+      - name: s04
         extra_args: ['--subtables', '4']
-      - name: s8
+      - name: s08
         extra_args: ['--subtables', '8']
       - name: s16
         extra_args: ['--subtables', '16']
