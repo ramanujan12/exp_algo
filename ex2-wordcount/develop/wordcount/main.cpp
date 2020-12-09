@@ -87,6 +87,7 @@ size_t count_substrings(const std::vector<uint8_t> &input) {
 
     concurrent_chaining_table chaining_table {};
 
+    #pragma omp parallel for
     for (size_t i = 0; i < (input.size() - 3u); ++i) {
         unsigned int key =
                   (static_cast<unsigned int>(input[i]) << 24u)
@@ -99,9 +100,61 @@ size_t count_substrings(const std::vector<uint8_t> &input) {
     return chaining_table.get_count();
 }
 
-int main() {
+static const char *usage_text =
+	"Usage: hashing [OPTIONS]\n"
+	"Possible OPTIONS are:\n"
+	"    --scalability SCALABILITY\n"
+	"        Select a scalability {strong, weak}.\n";
+
+int main(int argc, char **argv) {
+	std::string_view scalability;
+    
+	auto error = [] (const char *text) {
+		std::cerr << usage_text << "Usage error: " << text << std::endl;
+		exit(2);
+	};
+
+	// Argument for unary options.
+	const char *arg;
+
+	// Parse all options here.
+	char **p = argv + 1;
+
+	auto handle_unary_option = [&] (const char *name) -> bool {
+		assert(*p);
+		if(std::strcmp(*p, name))
+			return false;
+		++p;
+		if(!(*p))
+			error("expected argument for unary option");
+		arg = *p;
+		++p;
+		return true;
+	};
+
+	while(*p && !std::strncmp(*p, "--", 2)) {
+		if(handle_unary_option("--scalability")) {
+			scalability = arg;
+		}else{
+			error("unknown command line option");
+		}
+	}
+
+	if(*p)
+		error("unexpected arguments");
+
+	if(scalability.empty())
+		error("no scalability specified");
+
     std::vector<uint8_t> input;
-    input.resize(1 << 28);
+
+	if(scalability == "strong") {
+        input.resize(1 << 28);
+	}else if(scalability == "weak") {
+        input.resize((1u << 26u) * (unsigned)omp_get_max_threads());
+	}else{
+		error("unknown scalability");
+	}
 
     std::mt19937 prng{42};
 
@@ -118,6 +171,7 @@ int main() {
     auto bench_elapsed = std::chrono::high_resolution_clock::now() - bench_start;
 
     std::cout << "num_threads: " << omp_get_max_threads() << std::endl;
+    std::cout << "scalability: " << scalability << std::endl;
     std::cout << "result: " << result << std::endl;
     std::cout << "time: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(bench_elapsed).count()
