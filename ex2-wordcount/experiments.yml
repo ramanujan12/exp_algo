@@ -50,10 +50,12 @@ variants:
         extra_args: []
         environ:
             OMP_NUM_THREADS: 32
-      - name: t64
-        extra_args: []
-        environ:
-            OMP_NUM_THREADS: 64
+  - axis: scalability
+    items:
+      - name: weak_scalability
+        extra_args: ['--scalability', 'weak']
+      - name: strong_scalability
+        extra_args: ['--scalability', 'strong']
 
 # Simexpal wants an "instance" file, so we add an empty dummy file.
 instances:
