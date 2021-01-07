@@ -1,0 +1,83 @@
+builds:
+  - name: dijkstra
+    git: none
+    configure:
+      - args:
+        - 'meson'
+        - '--prefix=@THIS_PREFIX_DIR@'
+        - '--buildtype=debugoptimized'
+        - '@THIS_SOURCE_DIR@'
+    compile:
+      - args: ['ninja']
+    install:
+      - args: ['ninja', 'install']
+
+revisions:
+  - develop: true
+    build_version:
+      'dijkstra': ''
+
+experiments:
+  - name: dijkstra
+    use_builds: [dijkstra]
+    args: ['dijkstra', '@EXTRA_ARGS@']
+    stdout: out
+
+variants:
+  - axis: algorithm
+    items:
+      - name: transpose
+        extra_args: ['--algo', 'transpose']
+      - name: dijkstra
+        extra_args: ['--algo', 'dijkstra']
+  - axis: graph
+    items:
+      - name: cit_patent
+        extra_args: ['--graph', 'cit_patent']
+      - name: road_texas
+        extra_args: ['--graph', 'road_texas']
+  - axis: threads
+    items:
+      - name: t01
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 1
+      - name: t02
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 2
+      - name: t04
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 4
+      - name: t08
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 8
+      - name: t16
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 16
+      - name: t32
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 32
+      - name: t64
+        extra_args: []
+        environ:
+            OMP_NUM_THREADS: 64
+
+matrix:
+  include:
+    - experiments: [dijkstra]
+      axes: [algorithm, threads, graph]
+      variants: [dijkstra, t01]
+    - experiments: [dijkstra]
+      axes: [algorithm, graph, threads]
+      variants: [transpose, cit_patent]
+
+# Simexpal wants an "instance" file, so we add an empty dummy file.
+instances:
+  - repo: local
+    items:
+      - dummy
