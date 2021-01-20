@@ -4,7 +4,6 @@
 *dev-builds/
 *aux/
 *output/
-*instances/
 *status.cache
 simexpal.egg-info/
 *__pycache__/
