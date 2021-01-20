@@ -31,6 +31,12 @@ experiments:
     use_builds: [mssp]
     args: ['mssp-gpu', '@INSTANCE@', '@EXTRA_ARGS@']
     stdout: out
+  - name: test_gpu
+    use_builds: [mssp]
+    args: ['mssp-gpu', '@INSTANCE@', '@EXTRA_ARGS@']
+  - name: test_cpu
+    use_builds: [mssp]
+    args: ['mssp-cpu', 'batch-bf', '@INSTANCE@', '@EXTRA_ARGS@']
 
 variants:
   - axis: batchsize
@@ -94,7 +100,15 @@ matrix:
 
         # Scaling experiments for batched Bellman-Ford only.
         - experiments: [cpu-bf]
-          variants: [b1024]
+          variants: [b1024]	  
+
+        # Scaling experiments for batched Bellman-Ford only.
+        - experiments: [test_gpu]
+          variants: [b1024, t01]	  
+
+        # Scaling experiments for batched Bellman-Ford only.
+        - experiments: [test_cpu]
+          variants: [b1024, t32]	  
 
 instances:
   - repo: local

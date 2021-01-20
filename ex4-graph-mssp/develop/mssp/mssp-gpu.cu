@@ -1,3 +1,9 @@
+/*
+  to-do : 1. change the matrix order to column major and
+             -> change matrix 
+	     -> change indexing
+*/
+
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -5,12 +11,14 @@
 
 #include "csr.hpp"
 
+//__________________________________________________________________
 __device__ unsigned int crd2idx(unsigned int batch,
 				unsigned int batchsize,
 				unsigned int v) {
   return batch * batchsize + v;
 }
 
+//__________________________________________________________________
 // gpu function to run the multiple source bellman ford
 // 1. use array of things indices to be run
 // 2. loop over indices to be run
@@ -22,7 +30,7 @@ __global__ void bf_iteration(int           n,
 			     float        *csr_weights,
 			     float        *d,
 			     float        *d_new,
-			     unsigned int *indices,
+			     unsigned int *ind,
 			     int          *result) {
   auto thisThread = blockIdx.x * blockDim.x + threadIdx.x;
   auto numThreads = gridDim.x + blockDim.x;
@@ -30,28 +38,28 @@ __global__ void bf_iteration(int           n,
   // loop over all the batches that need to be done
   for (unsigned int batch = 0; batch < batchsize; ++batch) {
     bool changes = false;
-    if (indices[batch]) {
-      for (unsigned int v = thisThread; v < n; v += numThreads) {
-	float dist = d[crd2idx(batch, batchsize, v)];
-	for(unsigned int i = csr_index[v]; i < csr_index[v + 1]; ++i) {
-	  auto u = csr_cols[i];
-	  auto weight = csr_weights[i];
-	  
-	  if(dist > d[crd2idx(batch, batchsize, u)] + weight) {
-	    dist = d[crd2idx(batch, batchsize, u)] + weight;
-	    changes = true;
-	  }
+    auto idx = ind[batch];
+    for (unsigned int v = thisThread; v < n; v += numThreads) {
+      float dist = d[crd2idx(idx, batchsize, v)];
+      for(unsigned int i = csr_index[v]; i < csr_index[v + 1]; ++i) {
+	auto u = csr_cols[i];
+	auto weight = csr_weights[i];
+	
+	if(dist > d[crd2idx(idx, batchsize, u)] + weight) {
+	  dist = d[crd2idx(idx, batchsize, u)] + weight;
+	  changes = true;
 	}
-	d_new[crd2idx(batch, batchsize, v)] = dist;
       }
+      d_new[crd2idx(idx, batchsize, v)] = dist;
     }
     // check if a certain batch changed
     if (changes) {
-      result[batch] = 1;
+      result[idx] = 1;
     }
   }
 }
 
+//___________________________________________________________________
 // run the bf stuff
 void run_bf(const csr_matrix                &tr,
 	    unsigned int                     batchsize,
@@ -92,14 +100,17 @@ void run_bf(const csr_matrix                &tr,
   unsigned int *c, *ind_host, *ind_dev;
   c = (unsigned int*) malloc (batchsize * sizeof(unsigned int));
   ind_host = (unsigned int*) malloc (batchsize * sizeof(unsigned int));
-  memset(ind_host, 1, batchsize*sizeof(unsigned int));
+  for (unsigned int i = 0; i < batchsize; ++i) {
+    ind_host[i] = i;
+  }
   cudaMalloc(&ind_dev, batchsize*sizeof(unsigned int));
   
   unsigned int num_blocks = (tr.n + 255) / 256;
+  unsigned int to_solve = batchsize;
   while(true) {
     cudaMemset(result,  0, batchsize*sizeof(int));
     cudaMemcpy(ind_dev, ind_host, batchsize*sizeof(int), cudaMemcpyHostToDevice);
-    bf_iteration<<<num_blocks, 256>>>(tr.n, batchsize,
+    bf_iteration<<<num_blocks, 256>>>(tr.n, to_solve,
 				      csr_index, csr_cols, csr_weights,
 				      d, d_new, ind_dev, result);
     
@@ -108,10 +119,11 @@ void run_bf(const csr_matrix                &tr,
     std::size_t cnt = 0;
     for (std::size_t i = 0; i < batchsize; ++i) {
       if (!c[i]) {
+	ind_host[cnt] = i;
 	++cnt;
-	ind_host[i] = 0;
       }
     }
+    to_solve = cnt;
     if (cnt == batchsize)
       break;
     std::swap(d, d_new);
@@ -130,6 +142,8 @@ void run_bf(const csr_matrix                &tr,
   free(ind_host);
 }
 
+//___________________________________________________________________
+// int main(int argc, char** argv)
 int main(int argc, char **argv) {
   if(argc != 3)
     throw std::runtime_error("Expected instance and batch size as argument");

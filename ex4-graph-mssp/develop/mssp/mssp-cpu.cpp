@@ -45,17 +45,80 @@ private:
 };
 
 struct batch_bellman_ford {
-  batch_bellman_ford(unsigned int batchsize) {
-    // TODO
+  batch_bellman_ford(unsigned int size_batch) : _crd2idx(size_batch) {
+    
   }
   
   void run(const csr_matrix &tr, const std::vector<unsigned int> &sources) {
-    // TODO
+    // resize and fill the d and d_new vector
+    d.resize(sources.size() * tr.n);
+    d_new.resize(sources.size() * tr.n);
+    std::fill(d.begin(), d.end(), FLT_MAX);
+    for (std::size_t b = 0; b < sources.size(); ++b) {
+      d[_crd2idx(b, sources[b])] = 0;
+    }
+    
+    // do the actual bellman ford
+    bool changes = false;
+#pragma omp parallel
+    {
+      do {
+#pragma omp for reduction(||: changes)
+	for (unsigned int b = 0; b < sources.size(); ++b) {
+	  for (unsigned int v = 0; v < tr.n; ++v) {
+	    d_new[_crd2idx(b,v)] = d[_crd2idx(b,v)];
+	    
+	    for (unsigned int i = tr.ind[v]; i < tr.ind[v+1]; ++i) {
+	      auto u = tr.cols[i];
+	      auto weight = tr.weights[i];
+	      
+	      if (d_new[_crd2idx(b,v)] > d[_crd2idx(b,u)] + weight) {
+		d_new[_crd2idx(b,v)] = d[_crd2idx(b,u)] + weight;
+		changes = true;
+	      }
+	    }
+	  }
+	}
+
+#pragma omp single
+	std::swap(d, d_new);
+      } while(changes);
+    }
   }
-  
+
+  /*
+    std::vector <unsigned int> v_ind(_size_batch);
+    std::iota(v_indices.begin(), v_ind.end(), 0);
+    
+    std::vector <bool> v_changes(_size_batch, false);
+    for (unsigned int b = 0; b < v_ind.size(); ++b) {
+    
+    }
+    
+    // compute new indices vector
+    v_indices.clear();
+    for (unsigned int c = 0; c < v_changes.size(); ++i) {
+      if (v_changes[c]) {
+        v
+      }
+    }
+  */
 private:
   std::vector<float> d;
   std::vector<float> d_new;
+  
+  struct crd2idx {
+  public : 
+    crd2idx(unsigned int size_batch) : _size_batch(size_batch) {}
+
+    unsigned int operator()(unsigned int batch, unsigned int v) {
+      return batch * _size_batch + v;
+    }
+  protected :
+    unsigned int _size_batch;
+  };
+
+  crd2idx _crd2idx;
 };
 
 int main(int argc, char **argv) {
