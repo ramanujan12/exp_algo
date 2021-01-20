@@ -17,7 +17,7 @@
 __device__ unsigned int crd2idx(unsigned int batch,
 				unsigned int batchsize,
 				unsigned int v) {
-  return batch * batchsize + v;
+  return v * batchsize + batch;
 }
 
 //__________________________________________________________________
@@ -30,10 +30,10 @@ dim3 get_grid(unsigned int x, unsigned int y, dim3 block_2d) {
 
 //__________________________________________________________________
 // produce a grid_block based on the sizes
-/*
 dim3 get_block(unsigned int x, unsigned int y) {  
+  return dim3(1152, 4);
 }
-*/
+
 //__________________________________________________________________
 // gpu function to run the multiple source bellman ford
 // 1. use array of things indices to be run
@@ -92,8 +92,8 @@ __global__ void bf_iteration_2d(int           n,
   
   // loop over all the batches that need to be done
   bool changes = false;
-  for (unsigned int batch = thread_y; batch < batchsize; batch += n_threads_y) {
-    for (unsigned int v = thread_x; v < n; v += n_threads_x) {
+  for (unsigned int v = thread_x; v < n; v += n_threads_x) {
+    for (unsigned int batch = thread_y; batch < batchsize; batch += n_threads_y) {
       float dist = d[crd2idx(batch, batchsize, v)];
       for(unsigned int i = csr_index[v]; i < csr_index[v + 1]; ++i) {
 	auto u = csr_cols[i];
@@ -149,6 +149,7 @@ void run_bf(const csr_matrix                &tr,
   cudaMemcpy(d, initial.data(), tr.n * batchsize * sizeof(float), cudaMemcpyHostToDevice);
 
   /*
+  // 1d strategy
   // 2. loop over all the problems until they are all solved
   // controll array c for the indices that did change
   // array of indices to run over
@@ -185,7 +186,7 @@ void run_bf(const csr_matrix                &tr,
   }
   */
   // 2d strategy
-  dim3 block_2d(1024, 1024);
+  dim3 block_2d = get_block(tr.n, batchsize);
   dim3 grid_2d = get_grid(tr.n, batchsize, block_2d);
   
   while(true) {

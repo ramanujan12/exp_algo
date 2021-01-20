@@ -104,7 +104,7 @@ matrix:
 
         # Scaling experiments for batched Bellman-Ford only.
         - experiments: [test_gpu]
-          variants: [b8192, t01]	  
+          variants: [b16384, t01]	  
 
         # Scaling experiments for batched Bellman-Ford only.
         - experiments: [test_cpu]

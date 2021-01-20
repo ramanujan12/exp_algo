@@ -3,6 +3,8 @@
 #include <cstring>
 #include <fstream>
 #include <random>
+#include <atomic>
+#include <iomanip>
 
 #include "csr.hpp"
 
@@ -57,7 +59,9 @@ struct batch_bellman_ford {
     for (std::size_t b = 0; b < sources.size(); ++b) {
       d[_crd2idx(b, sources[b])] = 0;
     }
-    
+
+    /*
+    // first try
     // do the actual bellman ford
     bool changes = false;
 #pragma omp parallel
@@ -84,25 +88,56 @@ struct batch_bellman_ford {
 	std::swap(d, d_new);
       } while(changes);
     }
+    */
+
+    // lambda for new indice vector
+    auto get_indices = [] (std::vector <unsigned int>& v_ind,
+			   const std::vector <unsigned int>&   v_changes) {
+      // compute new indices vector
+      v_ind.clear();
+      for (unsigned int c = 0; c < v_changes.size(); ++c) {
+	if (v_changes[c]) {
+	  v_ind.push_back(c);
+	}
+      }
+    };
+    
+    // indices to run over
+    std::vector <unsigned int> v_ind(sources.size());
+    std::iota(v_ind.begin(), v_ind.end(), 0);
+    
+    // changing variables to check if certain indice changes
+    std::vector <unsigned int> v_changes(sources.size(), 0);
+#pragma omp parallel
+    {
+      do {
+#pragma omp for
+	for (unsigned int b = 0; b < v_ind.size(); ++b) {
+	  unsigned int idx = v_ind[b];
+	  for (unsigned int v = 0; v < tr.n; ++v) {
+	    d_new[_crd2idx(idx,v)] = d[_crd2idx(idx,v)];
+	    
+	    for (unsigned int i = tr.ind[v]; i < tr.ind[v+1]; ++i) {
+	      auto u = tr.cols[i];
+	      auto weight = tr.weights[i];
+	      
+	      if (d_new[_crd2idx(idx,v)] > d[_crd2idx(idx,u)] + weight) {
+		d_new[_crd2idx(idx,v)] = d[_crd2idx(idx,u)] + weight;
+# pragma omp atomic write
+		v_changes[idx] = 1;
+	      }
+	    }
+	  }
+	}
+	
+#pragma omp single
+	std::swap(d, d_new);
+#pragma omp single
+	get_indices(v_ind, v_changes);
+      } while(v_ind.size());
+    }
   }
 
-  /*
-    std::vector <unsigned int> v_ind(_size_batch);
-    std::iota(v_indices.begin(), v_ind.end(), 0);
-    
-    std::vector <bool> v_changes(_size_batch, false);
-    for (unsigned int b = 0; b < v_ind.size(); ++b) {
-    
-    }
-    
-    // compute new indices vector
-    v_indices.clear();
-    for (unsigned int c = 0; c < v_changes.size(); ++i) {
-      if (v_changes[c]) {
-        v
-      }
-    }
-  */
 private:
   std::vector<float> d;
   std::vector<float> d_new;
@@ -112,7 +147,7 @@ private:
     crd2idx(unsigned int size_batch) : _size_batch(size_batch) {}
 
     unsigned int operator()(unsigned int batch, unsigned int v) {
-      return batch * _size_batch + v;
+      return v * _size_batch + batch;
     }
   protected :
     unsigned int _size_batch;
@@ -129,7 +164,7 @@ int main(int argc, char **argv) {
   
   std::mt19937 prng{42};
   std::uniform_real_distribution<float> weight_distrib{0.0f, 1.0f};
-
+  
   // get the algo name for output
   std::string algo;
   if(!strcmp(argv[1], "parallel-dijkstra")) {
