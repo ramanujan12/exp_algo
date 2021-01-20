@@ -12,6 +12,8 @@
 #include "csr.hpp"
 
 //__________________________________________________________________
+// device function for the indexing
+// rather a lambda?
 __device__ unsigned int crd2idx(unsigned int batch,
 				unsigned int batchsize,
 				unsigned int v) {
@@ -19,10 +21,25 @@ __device__ unsigned int crd2idx(unsigned int batch,
 }
 
 //__________________________________________________________________
+// produce a 2d grid based on the sizes
+dim3 get_grid(unsigned int x, unsigned int y, dim3 block_2d) {
+  dim3 grid_2d((x + (block_2d.x - 1)) / block_2d.x,
+	       (y + (block_2d.y - 1)) / block_2d.y);
+  return grid_2d;
+}
+
+//__________________________________________________________________
+// produce a grid_block based on the sizes
+/*
+dim3 get_block(unsigned int x, unsigned int y) {  
+}
+*/
+//__________________________________________________________________
 // gpu function to run the multiple source bellman ford
 // 1. use array of things indices to be run
 // 2. loop over indices to be run
 // 3. give back array of the ones that changed
+/*
 __global__ void bf_iteration(int           n,
 			     unsigned int  batchsize,
 			     unsigned int *csr_index,
@@ -58,6 +75,43 @@ __global__ void bf_iteration(int           n,
     }
   }
 }
+*/
+
+__global__ void bf_iteration_2d(int           n,
+				unsigned int  batchsize,
+				unsigned int *csr_index,
+				unsigned int *csr_cols,
+				float        *csr_weights,
+				float        *d,
+				float        *d_new,
+				int          *result) {
+  auto thread_x = blockIdx.x * blockDim.x + threadIdx.x;
+  auto thread_y = blockIdx.y * blockDim.y + threadIdx.y;
+  auto n_threads_x = gridDim.x + blockDim.x;
+  auto n_threads_y = gridDim.y + blockDim.y;
+  
+  // loop over all the batches that need to be done
+  bool changes = false;
+  for (unsigned int batch = thread_y; batch < batchsize; batch += n_threads_y) {
+    for (unsigned int v = thread_x; v < n; v += n_threads_x) {
+      float dist = d[crd2idx(batch, batchsize, v)];
+      for(unsigned int i = csr_index[v]; i < csr_index[v + 1]; ++i) {
+	auto u = csr_cols[i];
+	auto weight = csr_weights[i];
+	
+	if(dist > d[crd2idx(batch, batchsize, u)] + weight) {
+	  dist = d[crd2idx(batch, batchsize, u)] + weight;
+	  changes = true;
+	}
+      }
+      d_new[crd2idx(batch, batchsize, v)] = dist;
+    }
+    // check if a certain batch changed
+  }
+  if (changes) {
+    *result = 1;
+  }
+}
 
 //___________________________________________________________________
 // run the bf stuff
@@ -83,7 +137,7 @@ void run_bf(const csr_matrix                &tr,
   int   *result;
   cudaMalloc(&d,      batchsize * tr.n * sizeof(float));
   cudaMalloc(&d_new,  batchsize * tr.n * sizeof(float));
-  cudaMalloc(&result, batchsize *        sizeof(int));
+  cudaMalloc(&result, /*batchsize * */   sizeof(int));
 
   std::vector <float> initial;
   initial.resize(tr.n * batchsize);  
@@ -93,7 +147,8 @@ void run_bf(const csr_matrix                &tr,
   }
   
   cudaMemcpy(d, initial.data(), tr.n * batchsize * sizeof(float), cudaMemcpyHostToDevice);
-  
+
+  /*
   // 2. loop over all the problems until they are all solved
   // controll array c for the indices that did change
   // array of indices to run over
@@ -128,7 +183,23 @@ void run_bf(const csr_matrix                &tr,
       break;
     std::swap(d, d_new);
   }
-
+  */
+  // 2d strategy
+  dim3 block_2d(1024, 1024);
+  dim3 grid_2d = get_grid(tr.n, batchsize, block_2d);
+  
+  while(true) {
+    cudaMemset(result, 0, sizeof(int));
+    bf_iteration_2d<<<grid_2d, block_2d>>>(tr.n, batchsize,
+					   csr_index, csr_cols, csr_weights,
+					   d, d_new, result);
+    unsigned int c;
+    cudaMemcpy(&c, result, sizeof(int), cudaMemcpyDeviceToHost);
+    if (!c)
+      break;
+    std::swap(d, d_new);
+  }
+  
   // 4. free memory
   cudaFree(csr_index);
   cudaFree(csr_cols);
@@ -136,10 +207,10 @@ void run_bf(const csr_matrix                &tr,
   cudaFree(d);
   cudaFree(d_new);
   cudaFree(result);
-  cudaFree(ind_dev);
+  // cudaFree(ind_dev);
   
-  free(c);
-  free(ind_host);
+  // free(c);
+  // free(ind_host);
 }
 
 //___________________________________________________________________
