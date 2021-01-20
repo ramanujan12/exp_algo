@@ -1,12 +1,11 @@
 builds:
-  - name: csr
+  - name: dijkstra
     git: none
     configure:
       - args:
         - 'meson'
         - '--prefix=@THIS_PREFIX_DIR@'
         - '--buildtype=debugoptimized'
-        - '--native-file=@THIS_SOURCE_DIR@/native.meson'
         - '@THIS_SOURCE_DIR@'
     compile:
       - args: ['ninja']
@@ -16,33 +15,27 @@ builds:
 revisions:
   - develop: true
     build_version:
-      'csr': ''
+      'dijkstra': ''
 
 experiments:
-  - name: transpose
-    use_builds: [csr]
-    args: ['transpose', '@INSTANCE@', '@EXTRA_ARGS@']
-    stdout: out
-  - name: cpu-dijkstra
-    use_builds: [csr]
-    args: ['sssp-cpu', 'dijkstra', '@INSTANCE@', '@EXTRA_ARGS@']
-    stdout: out
-  - name: cpu-bf
-    use_builds: [csr]
-    args: ['sssp-cpu', 'bf', '@INSTANCE@', '@EXTRA_ARGS@']
-    stdout: out
-  - name: gpu-bf
-    use_builds: [csr]
-    args: ['sssp-gpu', '@INSTANCE@', '@EXTRA_ARGS@']
+  - name: dijkstra
+    use_builds: [dijkstra]
+    args: ['dijkstra', '@EXTRA_ARGS@']
     stdout: out
 
 variants:
-  - axis: sources
+  - axis: algorithm
     items:
-      - name: s1
-        extra_args: ['1']
-      - name: s1000
-        extra_args: ['1000']
+      - name: transpose
+        extra_args: ['--algo', 'transpose']
+      - name: dijkstra
+        extra_args: ['--algo', 'dijkstra']
+  - axis: graph
+    items:
+      - name: cit_patent
+        extra_args: ['--graph', 'cit_patent']
+      - name: road_texas
+        extra_args: ['--graph', 'road_texas']
   - axis: threads
     items:
       - name: t01
@@ -75,16 +68,16 @@ variants:
             OMP_NUM_THREADS: 64
 
 matrix:
-    include:
-        - experiments: [transpose]
-          axes: [threads]
-        - experiments: [cpu-bf]
-          axes: [sources, threads]
-        - experiments: [cpu-dijkstra, gpu-bf]
-          axes: [sources]
+  include:
+    - experiments: [dijkstra]
+      axes: [algorithm, threads, graph]
+      variants: [dijkstra, t01]
+    - experiments: [dijkstra]
+      axes: [algorithm, graph, threads]
+      variants: [transpose, cit_patent]
 
+# Simexpal wants an "instance" file, so we add an empty dummy file.
 instances:
   - repo: local
     items:
-      - cit-patent.edges
-      - roadNet-TX.mtx
+      - dummy
